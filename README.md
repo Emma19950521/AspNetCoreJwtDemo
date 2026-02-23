@@ -15,7 +15,7 @@
 <h2> 安裝與執行</h2>
 <ol>
 <li>下載或 clone 專案：
-    <pre><code>git clone https://github.com/&lt;Emma19950521&gt;/AspNetCoreJwtDemo.git
+    <pre><code>git clone https://github.com/Emma19950521/AspNetCoreJwtDemo.git
 cd AspNetCoreJwtDemo</code></pre>
 </li>
 <li>安裝依賴套件：
