@@ -1,4 +1,5 @@
-﻿using MemberSystem.Models;
+﻿using MemberSystem.DTOs;
+using MemberSystem.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
@@ -23,17 +24,25 @@ namespace MemberSystem.Controllers
 		}
 
 		[HttpPost("register")]
-		public IActionResult Register(Users user)
+		public IActionResult Register(UserDto dto)
 		{
 			// 檢查帳號是否存在
-			var exist = users.Exists(u => u.Username == user.Username);
+			var exist = users.Any(u => u.Username == dto.Username);
 			if (exist)
 			{
-				return BadRequest("帳號已存在");
+				return BadRequest("使用者已存在");
 			}
+
+			var user = new Users
+			{
+				Username = dto.Username,
+				Password = dto.Password
+			};
 			users.Add(user);
 
-			return Ok("註冊成功");
+
+			// 回傳給前端的 DTO（可隱藏敏感資訊）
+			return Ok(new { dto.Username });
 		}
 
 
@@ -44,7 +53,7 @@ namespace MemberSystem.Controllers
 		}
 
 		[HttpPost("login")]
-		public IActionResult Login(Users loginUser)
+		public IActionResult Login(LoginDto loginUser)
 		{
 			var user = users.FirstOrDefault(u => u.Username == loginUser.Username &&
 				u.Password == loginUser.Password);
@@ -84,15 +93,13 @@ namespace MemberSystem.Controllers
 		[Authorize]
 		public IActionResult Profile()
 		{
-			var username = User.Identity.Name;
-			var IsAuth = User.Identity.IsAuthenticated;
-			var claimsList = User.Claims.Select(c => new
+			var dto = new ProfileDto
 			{
-				c.Type,
-				c.Value
-			});
-
-			return Ok(new { User = username, IsAuth, Claims = claimsList });
+				Username = User.Identity.Name,
+				IsAuthenticated = User.Identity.IsAuthenticated,
+				Claims = User.Claims.Select(c => new KeyValuePair<string, string>(c.Type, c.Value)).ToList()
+			};
+			return Ok(dto);
 		}
 
 
