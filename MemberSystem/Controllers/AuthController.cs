@@ -63,8 +63,7 @@ namespace MemberSystem.Controllers
 				return BadRequest("帳號或密碼錯誤");
 			}
 
-			// 登入成功 → 產生 JWT
-			// 從設定檔讀 key
+			// 登入成功 → 產生 JW
 			var keyString = _config["JwtSettings:Key"];
 			var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(keyString));
 			var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
@@ -76,11 +75,20 @@ namespace MemberSystem.Controllers
 
 			var token = new JwtSecurityToken(
 				claims: claims,
-				expires: DateTime.Now.AddHours(Convert.ToDouble(_config["JwtSettings:TokenValidityInHours"])),
+				expires: DateTime.Now.AddHours(Convert.ToDouble(_config["JwtSettings:TokenValidityInHours"])),// <-- JWT 過期時間
 				signingCredentials: creds
 			);
 
 			var tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+
+
+			Response.Cookies.Append("access_token", tokenString, new CookieOptions
+			{
+				HttpOnly = true,
+				Secure = true,
+				SameSite = SameSiteMode.Strict,
+				Expires = DateTimeOffset.UtcNow.AddHours(1)// <-- Cookie 過期時間
+			});
 
 			return Ok(new { token = tokenString });
 		}
@@ -112,6 +120,12 @@ namespace MemberSystem.Controllers
 		}
 
 
+
+		[HttpGet("test-error")]
+		public IActionResult TestError()
+		{
+			throw new Exception("爆炸測試");
+		}
 
 	}
 }
